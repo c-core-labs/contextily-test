@@ -9,7 +9,6 @@ import pytest
 import rasterio as rio
 from contextily.tile import _calculate_zoom
 from numpy.testing import assert_array_almost_equal
-import pytest
 from unittest.mock import patch, MagicMock
 import io
 from PIL import Image
@@ -32,16 +31,16 @@ def test_bounds2raster():
     _ = cx.bounds2raster(
         w, s, e, n, "test.tif", zoom=4, ll=True, source=cx.providers.CartoDB.Positron
     )
-    rtr = rio.open("test.tif")
-    img = np.array([band for band in rtr.read()]).transpose(1, 2, 0)
-    solu = (
-        -12528334.684053527,
-        2509580.5126589066,
-        -10023646.141204873,
-        5014269.05550756,
-    )
-    for i, j in zip(rtr.bounds, solu):
-        assert round(i - j, TOL) == 0
+    with rio.open("test.tif") as rtr:
+        img = np.array([band for band in rtr.read()]).transpose(1, 2, 0)
+        solu = (
+            -12528334.684053527,
+            2509580.5126589066,
+            -10023646.141204873,
+            5014269.05550756,
+        )
+        for i, j in zip(rtr.bounds, solu):
+            assert round(i - j, TOL) == 0
     # Check approximate pixel values instead of exact matches for robustness
     assert np.allclose(img[0, 100, :], [250, 250, 248, 255], atol=10)
     assert np.allclose(img[20, 120, :], [139, 153, 164, 255], atol=10)
@@ -61,21 +60,21 @@ def test_bounds2raster():
     img, ext = cx.bounds2raster(
         w, s, e, n, "test2.tif", zoom=7, ll=True, source=cx.providers.CartoDB.Positron
     )
-    rtr = rio.open("test2.tif")
-    rimg = np.array([band for band in rtr.read()]).transpose(1, 2, 0)
-    assert rimg.shape == img.shape
-    assert rimg.sum() == img.sum()
-    assert_array_almost_equal(rimg.mean(), img.mean())
-    assert_array_almost_equal(
-        ext, (0.0, 939258.2035682457, 6261721.35712164, 6887893.492833804)
-    )
-    rtr_bounds = [
-        -611.49622628141,
-        6262332.853347922,
-        938646.7073419644,
-        6888504.989060086,
-    ]
-    assert_array_almost_equal(list(rtr.bounds), rtr_bounds)
+    with rio.open("test2.tif") as rtr:
+        rimg = np.array([band for band in rtr.read()]).transpose(1, 2, 0)
+        assert rimg.shape == img.shape
+        assert rimg.sum() == img.sum()
+        assert_array_almost_equal(rimg.mean(), img.mean())
+        assert_array_almost_equal(
+            ext, (0.0, 939258.2035682457, 6261721.35712164, 6887893.492833804)
+        )
+        rtr_bounds = [
+            -611.49622628141,
+            6262332.853347922,
+            938646.7073419644,
+            6888504.989060086,
+        ]
+        assert_array_almost_equal(list(rtr.bounds), rtr_bounds)
 
 
 @pytest.mark.parametrize("n_connections", [0, 1, 16])
@@ -521,9 +520,9 @@ def test_warp_img_transform():
     _ = cx.bounds2raster(
         w, s, e, n, "test.tif", zoom=4, ll=True, source=cx.providers.CartoDB.Positron
     )
-    rtr = rio.open("test.tif")
-    img = np.array([band for band in rtr.read()])
-    wimg, _ = cx.warp_img_transform(img, rtr.transform, rtr.crs, "epsg:4326")
+    with rio.open("test.tif") as rtr:
+        img = np.array([band for band in rtr.read()])
+        wimg, _ = cx.warp_img_transform(img, rtr.transform, rtr.crs, "epsg:4326")
     # Check approximate pixel values instead of exact matches for robustness
     assert np.allclose(wimg[:, 100, 100], [249, 249, 247, 255], atol=10)
     assert np.allclose(wimg[:, 100, 200], [250, 250, 248, 255], atol=10)
@@ -553,9 +552,9 @@ def test_ll2wdw():
     )
     hou = (-10676650.69219051, 3441477.046670125, -10576977.7804825, 3523606.146650609)
     _ = cx.bounds2raster(w, s, e, n, "test.tif", zoom=4, ll=True)
-    rtr = rio.open("test.tif")
-    wdw = cx.tile.bb2wdw(hou, rtr)
-    assert wdw == ((152, 161), (189, 199))
+    with rio.open("test.tif") as rtr:
+        wdw = cx.tile.bb2wdw(hou, rtr)
+        assert wdw == ((152, 161), (189, 199))
 
 
 def test__sm2ll():
