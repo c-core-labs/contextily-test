@@ -617,7 +617,10 @@ def test_place():
         4891969.810251278,
     ]
     expected_zoom = 10
-    loc = cx.Place(SEARCH, zoom_adjust=ADJUST)
+    # Use a geocoder with increased timeout to avoid flaky network issues
+    import geopy
+    geocoder = geopy.geocoders.Nominatim(user_agent="contextily_test", timeout=10)
+    loc = cx.Place(SEARCH, zoom_adjust=ADJUST, geocoder=geocoder)
     assert loc.im.shape == (256, 256, 4)
     loc  # Make sure repr works
 
@@ -627,7 +630,7 @@ def test_place():
     assert_array_almost_equal(loc.bbox_map, expected_bbox_map)
     assert loc.zoom == expected_zoom
 
-    loc = cx.Place(SEARCH, path="./test2.tif", zoom_adjust=ADJUST)
+    loc = cx.Place(SEARCH, path="./test2.tif", zoom_adjust=ADJUST, geocoder=geocoder)
     assert os.path.exists("./test2.tif")
 
     # .plot() method
@@ -685,7 +688,10 @@ def test_add_basemap_local_source():
     f, ax = matplotlib.pyplot.subplots(1)
     ax.set_xlim(subset[0], subset[1])
     ax.set_ylim(subset[2], subset[3])
-    _ = cx.Place(SEARCH, path="./test2.tif", zoom_adjust=ADJUST)
+    # Use a geocoder with increased timeout to avoid flaky network issues
+    import geopy
+    geocoder = geopy.geocoders.Nominatim(user_agent="contextily_test", timeout=10)
+    _ = cx.Place(SEARCH, path="./test2.tif", zoom_adjust=ADJUST, geocoder=geocoder)
     cx.add_basemap(ax, source="./test2.tif", reset_extent=True)
 
     assert_array_almost_equal(subset, ax.images[0].get_extent())
@@ -738,7 +744,10 @@ def test_add_basemap_full_read():
     f, ax = matplotlib.pyplot.subplots(1)
     ax.set_xlim(x1, x2)
     ax.set_ylim(y1, y2)
-    loc = cx.Place(SEARCH, path="./test2.tif", zoom_adjust=ADJUST)
+    # Use a geocoder with increased timeout to avoid flaky network issues
+    import geopy
+    geocoder = geopy.geocoders.Nominatim(user_agent="contextily_test", timeout=10)
+    loc = cx.Place(SEARCH, path="./test2.tif", zoom_adjust=ADJUST, geocoder=geocoder)
     cx.add_basemap(ax, source="./test2.tif", reset_extent=False)
 
     raster_extent = (
